@@ -1,0 +1,94 @@
+#-----------------------------------------------------------------------
+# PROYECTO: Dinámica del Mercado Petrolero y Economía de Venezuela
+# FASE 3: Transformar y Limpiar Datos (Consolidación de Datos)
+# AUTOR: CEMC
+# FECHA: 02-07-2025 (Actualizado a 05-07-2025)
+#-----------------------------------------------------------------------
+# Cargamos la librería principal
+library(tidyverse) 
+
+# Definir el rango de años para el análisis, como se especifica en la pregunta de investigación
+ANIO_INICIO <- 1980
+ANIO_FIN <- 2023
+
+# --- 1. PREPARACIÓN DE LAS VARIABLES CLAVE Y FILTRADO INICIAL (Transformación y Limpieza) ---
+# Se filtran los datos al rango de años de interés desde el inicio
+# para asegurar que todos los cálculos y la consolidación se basen en el período relevante.
+
+# Aseguramos que todas las variables tengan el 'anio' y el 'valor' o la métrica directamente
+# y que estén dentro del rango de interés.
+
+pib_nominal_preparado <- venezuela_pib_nominal %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, pib_nominal = valor)
+
+pib_real_preparado <- venezuela_pib_real %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, pib_real_variacion_porcentual = valor)
+
+exportaciones_petroleo_valor_preparado <- venezuela_exportaciones_petroleo %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, exportaciones_petroleo_usd = valor)
+
+saldo_corriente_preparado <- venezuela_saldo_corriente %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, saldo_corriente_usd = valor)
+
+produccion_petroleo_bd_preparado <- venezuela_produccion_petroleo %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, produccion_petroleo_bd = valor)
+
+exportaciones_crudo_bd_preparado <- venezuela_exportaciones_petroleo_bd %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, exportaciones_crudo_bd = valor)
+
+# Para los precios, ya están en formato ancho, solo filtramos por año.
+precios_cesta_opep_preparado <- precio_cesta_opep %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) %>%
+  select(anio, precio_nominal_cesta = precio_nominal, precio_real_cesta = precio_real)
+
+# Para productos petrolíferos, ya está en formato ancho, solo filtramos por año.
+productos_petroliferos_preparado <- venezuela_productos_petro %>%
+  filter(anio >= ANIO_INICIO & anio <= ANIO_FIN) # Ya tiene las columnas de componentes y anio
+
+
+# --- 2. CÁLCULO DE LOS ÍNDICES CLAVE (Transformación) ---
+
+# 01 "Índice de Exposición a la Renta Petrolera"
+# PIB Nominal / Valor de Exportaciones de Petróleo
+indice_exposicion_petrolera <- pib_nominal_preparado %>%
+  left_join(exportaciones_petroleo_valor_preparado, by = "anio") %>%
+  mutate(indice_exposicion = pib_nominal / exportaciones_petroleo_usd) %>%
+  select(anio, indice_exposicion) # Solo anio y el índice para la consolidación
+
+# 02 "Índice de Eficiencia de la Renta Petrolera"
+# Producción Total Anual de Barriles de Crudo / PIB Nominal Anual
+
+# Primero, calculamos barriles anuales de la producción de petróleo
+produccion_anual_barriles <- produccion_petroleo_bd_preparado %>%
+  mutate(produccion_total_barriles_anuales = produccion_petroleo_bd * 365) %>%
+  select(anio, produccion_total_barriles_anuales)
+
+indice_eficiencia_petrolera <- produccion_anual_barriles %>%
+  left_join(pib_nominal_preparado, by = "anio") %>%
+  mutate(indice_eficiencia = produccion_total_barriles_anuales / pib_nominal) %>%
+  select(anio, indice_eficiencia) # Solo anio y el índice para la consolidación
+
+
+# --- 3. CONSOLIDACIÓN FINAL DE LOS DATOS (Limpieza y Organización) ---
+
+# Iniciamos con el PIB Nominal y vamos añadiendo el resto de los indicadores y los índices.
+datos_venezuela_consolidados <- pib_nominal_preparado %>%
+  left_join(pib_real_preparado, by = "anio") %>%
+  left_join(exportaciones_petroleo_valor_preparado, by = "anio") %>%
+  left_join(saldo_corriente_preparado, by = "anio") %>%
+  left_join(produccion_petroleo_bd_preparado, by = "anio") %>%
+  left_join(exportaciones_crudo_bd_preparado, by = "anio") %>%
+  left_join(precios_cesta_opep_preparado, by = "anio") %>%
+  # Ahora unimos los índices calculados
+  left_join(indice_exposicion_petrolera, by = "anio") %>%
+  left_join(indice_eficiencia_petrolera, by = "anio")
+
+# NOTA: productos_petroliferos_preparado se mantiene como un dataframe separado para su visualización
+
+
