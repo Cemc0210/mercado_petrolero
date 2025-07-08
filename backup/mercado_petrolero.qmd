@@ -1,0 +1,555 @@
+---
+title: "Mercado Petrolero Venezolano 1980-2023"
+format: html
+editor: visual
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+# Configuración inicial para cargar librerías y datos de fases previas
+# Este chunk se ejecuta pero no muestra el código ni los mensajes.
+
+# Cargar las librerías necesarias para todo el documento
+library(tidyverse)
+library(readxl)
+library(plotly)
+library(DT)
+library(lmtest) 
+library(car)    
+
+# Definir el rango de años para el análisis
+ANIO_INICIO <- 1980
+ANIO_FIN <- 2023
+
+# --- Ejecutar los scripts de fases anteriores para preparar los datos ---
+source("script/01_importar_datos_excel.R")
+source("script/02_filtrar_datos.R")
+source("script/03_transformar_datos.R")
+# No se hace source de 04_visualizar_datos.R ni 05_modelado.R aquí,
+# ya que su código se insertará directamente en los chunks posteriores del .qmd
+```
+
+# Dinámica Estructural y Eficiencia Económica del Petróleo en Venezuela (1980-2023)
+
+------------------------------------------------------------------------
+
+## Introducción y Relevancia del Tema
+
+Nuestro proyecto aborda la **"Dinámica Estructural y Eficiencia Económica del Petróleo en Venezuela (1980-2023): Un Análisis de Impactos Macroeconómicos Históricos."** Este tema es de **gran relevancia** para Venezuela debido a su profunda y duradera dependencia del petróleo. Comprender cómo las fluctuaciones del mercado petrolero global han moldeado la economía del país no solo es crucial para entender su trayectoria pasada, sino también para anticipar posibles escenarios futuros.
+
+Como equipo, nos motiva este tema porque nos permite aplicar las robustas **herramientas de la ciencia de datos** a un problema macroeconómico complejo con un impacto social directo. La historia reciente de Venezuela está intrínsecamente ligada a la generación de ingresos a través del petróleo, y creemos que un **análisis cuantitativo riguroso**, más allá de narrativas políticas o cualitativas, puede ofrecer perspectivas valiosas y basadas en evidencia.
+
+Este proyecto busca **contribuir al campo de la ciencia de datos** demostrando cómo técnicas de **análisis de series temporales**, la **creación de indicadores derivados** y la **visualización de datos** pueden ser utilizadas para desentrañar relaciones complejas en una economía altamente dependiente de un *commodity*. La elección de **R** como herramienta principal es fundamental para la importación, limpieza, transformación y visualización de estas series históricas.
+
+## Pregunta de Investigación
+
+Basándonos en el tema seleccionado y los indicadores que planteamos derivar, nuestra pregunta de investigación es la siguiente:
+
+**¿Cómo han modificado las principales variables del mercado petrolero internacional (precios, producción y exportaciones) la dinámica del PIB venezolano y otros indicadores macroeconómicos clave entre 1980 y 2023, y cómo ha evolucionado la eficiencia económica del país para generar valor a partir de su sector petrolero y la magnitud de su exposición a los ingresos petroleros a lo largo de este período?**
+
+Esta pregunta es clara, específica y, lo más importante, susceptible de análisis mediante **técnicas estadísticas y visualización de datos en R**. Nos permitirá:
+
+-   **Cuantificar la relación** entre variables petroleras y macroeconómicas (PIB, balanza de cuenta corriente, etc.).
+-   **Evaluar la evolución de la eficiencia económica** del país en la transformación de su producción petrolera en PIB, a través de la creación de un **Índice de Eficiencia de la Producción Petrolera**.
+-   **Medir la dependencia económica** de Venezuela a los ingresos por exportaciones petroleras, utilizando un **Índice de Exposición a los Ingresos Petroleros**.
+-   Utilizar una **serie de tiempo suficientemente larga (1980-2023)** para capturar diversos ciclos económicos y petroleros, enriqueciendo el análisis.
+
+## Fuentes de Datos
+
+Para este proyecto, nuestra estrategia inicial es utilizar exclusivamente las **publicaciones anuales de la Organización de Países Exportadores de Petróleo (OPEP)**. Esta decisión se basa en la necesidad de obtener datos consistentes y de una fuente autorizada en el ámbito petrolero, lo que minimiza la heterogeneidad y los problemas de compatibilidad de datos que podrían surgir de múltiples fuentes.
+
+Los **cuadros específicos del *Annual Statistical Bulletin* (ASB) de la OPEP** que pretendemos utilizar son:
+
+-   **Cuadro 2.2:** PIB nominal de los miembros de la OPEP (con énfasis en Venezuela).
+-   **Cuadro 2.3:** Tasas de crecimiento del PIB real de los miembros de la OPEP (con énfasis en Venezuela).
+-   **Cuadro 2.5:** Valores de las exportaciones de petróleo de los miembros de la OPEP (con énfasis en Venezuela).
+-   **Cuadro 2.7:** Saldos de cuenta corriente en los miembros de la OPEP.
+-   **Cuadro 3.5:** Producción mundial de petróleo crudo por país.
+-   **Cuadro 4.4:** Producción de productos petrolíferos en los miembros de la OPEP (para la producción general si no se encuentra solo de crudo).
+-   **Cuadro 5.2:** Exportaciones mundiales de petróleo crudo por país (con énfasis en Venezuela).
+-   **Cuadro 7.2:** Canasta de referencia de la OPEP en términos nominales y reales.
+
+### Viabilidad de Obtención y Recolección Periódica
+
+La OPEP publica sus estadísticas anualmente en el ASB, disponible en su sitio web, lo que garantiza la **recolección periódica de datos**. La viabilidad es alta, ya que los datos están centralizados y son públicos. Nuestro enfoque será descargar las ediciones relevantes del ASB y extraer las series de tiempo para Venezuela manualmente o mediante herramientas de raspado web si la estructura lo permite.
+
+### Evaluación de Factibilidad de la Investigación
+
+Consideramos que la investigación es **altamente factible** por las siguientes razones:
+
+-   **Disponibilidad de Datos:** La OPEP es una fuente confiable y publica series históricas extensas, crucial para el período 1980-2023. Esto aborda una preocupación común en la recolección de datos sobre Venezuela.
+-   **Consistencia de Datos:** Al utilizar una única fuente, se minimizan los problemas de diferencias metodológicas o de medición entre distintas bases de datos.
+-   **Relevancia de los Datos:** Los indicadores seleccionados son directamente pertinentes a la pregunta de investigación y permiten la construcción de los índices derivados propuestos.
+-   **Enfoque de R:** El formato tabular de los datos de la OPEP es ideal para la importación, manipulación y análisis en R, utilizando paquetes como `tidyverse`, `ggplot2` y otros para series de tiempo.
+
+Nuestra principal preocupación es asegurar que todos los datos necesarios para la construcción de los índices derivados (PIB nominal de Venezuela y producción/exportaciones de petróleo de Venezuela) estén completos y consistentes para todo el período 1980-2023 dentro de las publicaciones de la OPEP. Realizaremos una verificación exhaustiva de la completitud de las series históricas antes de la siguiente fase del proyecto.
+
+------------------------------------------------------------------------
+
+## Índices Derivados para el Análisis de la Economía Petrolera Venezolana
+
+Para profundizar en la interrelación entre el sector petrolero y el desempeño macroeconómico de Venezuela, construiremos los siguientes **Dos índices clave**. Cada uno ofrecerá una perspectiva única sobre la dinámica económica del país.
+
+### 1. Índice de Exposición a los Ingresos Petroleros
+
+Este índice busca cuantificar qué **proporción del PIB nominal se relaciona con los ingresos por exportaciones petroleras**, reflejando el peso relativo de la venta de petróleo en el tamaño total de la economía venezolana.
+
+-   **¿Por qué se crea?** La economía venezolana ha estado históricamente ligada a la suerte del petróleo. Este índice nos permite medir y rastrear numéricamente la **magnitud de la actividad económica que se asocia con la principal fuente de divisas del país**. Un valor más bajo en este índice puede indicar una mayor "exposición" o "dependencia", ya que se necesita una mayor base productiva (PIB) para generar una unidad de ingreso petrolero, lo que puede señalar problemas en la capacidad de la economía para crecer más allá del sector extractivo.
+
+-   **¿Cómo se crea?**
+
+    -   **Datos necesarios (de publicaciones OPEP):**
+        -   **PIB Nominal Anual de Venezuela:** Se tomará del Cuadro 2.2: *PIB nominal de los miembros de la OPEP*.
+        -   **Valor de las Exportaciones de Petróleo Anuales de Venezuela:** Se obtendrá del Cuadro 2.5: *Valores de las exportaciones de petróleo de los miembros de la OPEP*.
+    -   **Fórmula:** $$
+          \text{Índice de Exposición a los Ingresos Petroleros} = \frac{\text{PIB Nominal Anual de Venezuela}}{\text{Valor de las Exportaciones de Petróleo Anuales de Venezuela}}
+          $$
+
+-   **Interpretación:**
+
+    -   Un **valor más alto** en este índice indica que el PIB nominal es significativamente mayor en proporción a los ingresos por exportaciones petroleras. Esto puede sugerir una economía más diversificada o que el sector petrolero genera menos valor de exportación en relación con la producción interna, lo que implica, paradójicamente, una **mayor exposición** en el sentido de que la capacidad del PIB para ser mayor a las exportaciones indica la salud de la economía.
+    -   Un **valor más bajo** significaría que el PIB nominal está más directamente ligado o es proporcionalmente menor respecto a los ingresos por exportaciones petroleras, lo que indica una **alta dependencia** del sector petrolero.
+
+### 2. Índice de Eficiencia Económica de la Producción Petrolera
+
+Este índice aborda la pregunta fundamental: **¿Cuántos barriles de petróleo fueron necesarios para generar una unidad de Producto Interno Bruto (PIB) en la economía venezolana?** Se centra en la productividad económica del recurso natural más vital del país, pero desde la perspectiva de "cuánto insumo petrolero se necesitó para X producto".
+
+-   **¿Por qué se crea?** Más allá de la cantidad de petróleo producido, este índice revela la **cantidad de volumen petrolero (barriles) que se requirió para generar riqueza nacional**. Un aumento en este índice indica que se necesitan más barriles para generar la misma cantidad de PIB, lo cual señala una **pérdida de capacidad productiva o una menor eficiencia** en la transformación del recurso en valor económico. Es crucial para entender si la producción petrolera se traduce de manera efectiva en bienestar económico.
+
+-   **¿Cómo se crea?**
+
+    -   **Datos necesarios (de publicaciones OPEP):**
+        -   **Producción Total Anual de Barriles de Crudo de Venezuela:** Se obtendrá del Cuadro 3.5: *Producción mundial de petróleo crudo por país* o del Cuadro 4.4: *Producción de productos petrolíferos en los miembros de la OPEP*, asegurando que se refiere a la producción de crudo de Venezuela.
+        -   **PIB Nominal Anual de Venezuela:** Del Cuadro 2.2: *PIB nominal de los miembros de la OPEP*.
+    -   **Fórmula:** $$
+          \text{Índice de Eficiencia de la Producción Petrolera} = \frac{\text{Producción Total Anual de Barriles de Crudo de Venezuela}}{\text{PIB Nominal Anual de Venezuela}}
+          $$
+
+-   **Interpretación:**
+
+    -   Un **valor más alto** indica que se requirieron más barriles de petróleo para generar una unidad de PIB, lo que sugiere una **menor eficiencia económica** en la transformación del recurso.
+    -   Un **valor más bajo** implica que se generó más PIB por cada barril de petróleo producido, lo que sugiere una **mayor eficiencia** o una mejor capacidad multiplicadora del sector petrolero en la economía.
+
+¡Excelente idea! Usar **tabsets** en la Sección 2 hará que la presentación de tus gráficos y tablas sea mucho más **concisa y organizada**, permitiendo a tus lectores navegar entre las diferentes visualizaciones de manera eficiente sin que la página se sienta abrumadora.
+
+Aquí te muestro cómo integrar los tabsets en tu `documento Quarto` para la Sección 2. Voy a agrupar los gráficos de **"Tendencias Históricas"** en una pestaña, los **"Gráficos Comparativos"** en otra, los **"Índices Derivados"** en una tercera, y finalmente, las **"Tablas Interactivas"** en una cuarta pestaña.
+
+------------------------------------------------------------------------
+
+## 2. Resultados y Visualización de Datos
+
+Esta sección presenta las visualizaciones clave generadas a partir de nuestro análisis de datos, utilizando R con las librerías `ggplot2` para gráficos estáticos, `plotly` para interactividad y `DT` para tablas dinámicas. Estos elementos gráficos son fundamentales para comprender las **tendencias históricas** de las variables macroeconómicas y petroleras de Venezuela, así como las **interrelaciones** entre ellas y la evolución de los **índices derivados** que hemos propuesto.
+
+------------------------------------------------------------------------
+
+::: panel-tabset
+### Tendencias Históricas
+
+Aquí exploramos la evolución a largo plazo de las principales variables macroeconómicas y petroleras de Venezuela, permitiendo identificar patrones, ciclos y puntos de inflexión significativos entre 1980 y 2023.
+
+#### Evolución del Producto Interno Bruto Nominal de Venezuela
+
+Este gráfico ilustra la trayectoria del **Producto Interno Bruto (PIB) de Venezuela en valores nominales**, ofreciendo una perspectiva general del desempeño económico del país a lo largo del tiempo.
+
+```{r echo=FALSE}
+# Gráfico 1: Evolución del PIB Nominal de Venezuela
+grafico_pib_nominal <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = pib_nominal)) +
+  geom_line(color = "darkblue", linewidth = 1) +
+  geom_point(color = "darkblue", size = 2) +
+  labs(title = "PIB Nominal de Venezuela (1980-2023)", x = "Ano", y = "PIB Nominal (Millones de USD)") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma)
+
+# Para generar un gráfico interactivo en Quarto con plotly
+ggplotly(grafico_pib_nominal)
+```
+
+#### Variación Anual del Producto Interno Bruto Real de Venezuela
+
+Este gráfico detalla las **tasas de crecimiento o decrecimiento real de la economía venezolana**, brindando una visión ajustada por la inflación de su dinámica productiva.
+
+```{r pib-real, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 2: Variación Porcentual del PIB Real
+grafico_pib_real_variacion <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = pib_real_variacion_porcentual)) +
+  geom_line(color = "skyblue", linewidth = 1) +
+  geom_point(color = "skyblue", size = 2) +
+  labs(title = "Variación Porcentual del PIB Real de Venezuela (1980-2023)", x = "Año", y = "Variación PIB Real (%)") +
+  theme_minimal() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") # Línea de referencia en 0
+ggplotly(grafico_pib_real_variacion)
+```
+
+#### Saldo de la Cuenta Corriente de Venezuela
+
+El gráfico del **saldo de la cuenta corriente** refleja el balance de las transacciones de Venezuela con el resto del mundo, indicando si el país actúa como un prestamista o prestatario neto a nivel global.
+
+```{r cuenta-corriente, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 4: Saldo de la Cuenta Corriente
+grafico_saldo_corriente <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = saldo_corriente_usd)) +
+  geom_line(color = "coral", linewidth = 1) +
+  geom_point(color = "coral", size = 2) +
+  labs(title = "Saldo de la Cuenta Corriente de Venezuela (1980-2023)", x = "Año", y = "Saldo Cuenta Corriente (Millones de USD)") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50")
+ggplotly(grafico_saldo_corriente)
+```
+
+#### Exportaciones de Petróleo de Venezuela
+
+Este gráfico visualiza la **tendencia de los ingresos generados por las exportaciones de petróleo**, una fuente históricamente vital de divisas para el país.
+
+```{r exportaciones-petroleo, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 3: Exportaciones de Petróleo (Valor en USD)
+grafico_exportaciones_valor <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = exportaciones_petroleo_usd)) +
+  geom_line(color = "darkgreen", linewidth = 1) +
+  geom_point(color = "darkgreen", size = 2) +
+  labs(title = "Exportaciones de Petróleo de Venezuela (Valor)", x = "Año", y = "Exportaciones Petróleo (Millones de USD)") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma)
+ggplotly(grafico_exportaciones_valor)
+```
+
+#### Producción de Petróleo Crudo de Venezuela
+
+Este gráfico muestra la **evolución de la capacidad de producción de crudo de Venezuela**, un indicador clave de su rendimiento en el sector petrolero.
+
+```{r produccion-crudo, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 5: Producción de Petróleo Crudo (1.000 B/D)
+grafico_produccion_petroleo_bd <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = produccion_petroleo_bd)) +
+  geom_line(color = "darkred", linewidth = 1) +
+  geom_point(color = "darkred", size = 2) +
+  labs(title = "Producción de Petróleo Crudo de Venezuela (1980-2023)", x = "Año", y = "Producción Petróleo (Miles B/D)") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma)
+ggplotly(grafico_produccion_petroleo_bd)
+```
+
+#### Precios de la Cesta OPEP (Nominal y Real)
+
+Estos gráficos presentan las **fluctuaciones del precio de la canasta de referencia de la OPEP**, tanto en términos nominales (sin ajustar por inflación) como reales (ajustados por inflación), esenciales para contextualizar el entorno global del petróleo.
+
+```{r precios-opep, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 7: Precio Cesta OPEP (Nominal y Real)
+precios_formato_largo <- datos_venezuela_consolidados %>%
+  select(anio, precio_nominal_cesta, precio_real_cesta) %>%
+  pivot_longer(cols = starts_with("precio_"), names_to = "tipo_precio", values_to = "valor_precio") %>%
+  mutate(tipo_precio = dplyr::recode(tipo_precio, # <--- ¡CAMBIA ESTA LÍNEA!
+                                     "precio_nominal_cesta" = "Nominal",
+                                     "precio_real_cesta" = "Real"))
+
+grafico_precio_cesta_opep <- ggplot(precios_formato_largo, aes(x = anio, y = valor_precio, color = tipo_precio)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(title = "Precio Cesta OPEP: Nominal vs. Real (1980-2023)", x = "Ano", y = "Precio ($/b)", color = "Tipo de Precio") +
+  theme_minimal() +
+  scale_color_manual(values = c("Nominal" = "purple", "Real" = "darkorange")) +
+  scale_y_continuous(labels = scales::dollar)
+ggplotly(grafico_precio_cesta_opep)
+```
+
+#### Producción de Productos Petrolíferos de Venezuela
+
+Este gráfico complementa la visión de la producción de crudo, mostrando el **volumen de productos refinados o derivados del petróleo** producidos por Venezuela.
+
+```{r produccion-productos-petroliferos, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 8: PRODUCCIÓN DE PRODUCTOS PETROLÍFEROS TOTAL Y COMPONENTES
+productos_petroliferos_formato_largo <- productos_petroliferos_preparado %>%
+  pivot_longer(cols = -anio, names_to = "componente", values_to = "valor_produccion") %>%
+  mutate(componente = factor(componente, levels = c("Produccion_Total", "Gasolina", "Queroseno", "Destilados", "Residuos", "Otros")))
+
+grafico_produccion_productos_petroliferos <- ggplot(productos_petroliferos_formato_largo, aes(x = anio, y = valor_produccion, color = componente)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Produccion de Productos Petroliferos de Venezuela por Componente (1980-2023)",
+    x = "Ano",
+    y = "Produccion (Miles de Barriles)",
+    color = "Componente Petrolifero"
+  ) +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_color_brewer(palette = "Set1")
+ggplotly(grafico_produccion_productos_petroliferos)
+```
+
+### Gráficos Comparativos
+
+Estos gráficos están diseñados para visualizar las **interrelaciones entre las variables clave**, lo cual es fundamental para el análisis de impacto macroeconómico y la identificación de dependencias.
+
+#### PIB Nominal vs. Exportaciones de Petróleo
+
+Este gráfico compara directamente la **evolución del PIB nominal con el valor de las exportaciones petroleras**, permitiendo una visualización de su correlación a lo largo del tiempo.
+
+```{r pib-vs-exportaciones, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+
+```
+
+#### Producción de Petróleo vs. Precio Real de la Cesta OPEP
+
+Este gráfico explora la **relación entre el volumen de producción de crudo y el precio real del petróleo**, ayudando a entender cómo estas dos variables clave del sector petrolero interactúan en el contexto económico venezolano.
+
+```{r produccion-vs-precio, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+
+```
+
+#### Saldo de la Cuenta Corriente vs. Exportaciones de Petróleo
+
+Este gráfico compara el **saldo de la cuenta corriente con las exportaciones de petróleo**, destacando la profunda influencia de los ingresos petroleros en el balance externo del país.
+
+```{r cc-vs-exportaciones, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+
+```
+
+### Índices Derivados
+
+Los índices calculados en nuestra metodología son métricas clave para abordar directamente la pregunta de investigación, y su visualización es esencial para interpretar las dinámicas de **eficiencia** y **exposición** de la economía petrolera venezolana.
+
+#### Tendencia del Índice de Exposición a los Ingresos Petroleros
+
+Este gráfico muestra la evolución del **Índice de Exposición a los Ingresos Petroleros**, permitiendo observar cómo la relación entre el PIB nominal y los ingresos por exportaciones de petróleo ha cambiado a lo largo del tiempo, reflejando la magnitud de la dependencia.
+
+```{r indice-exposicion, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 9: Evolución del Índice de Exposición a la Renta Petrolera
+grafico_indice_exposicion <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = indice_exposicion)) +
+  geom_line(color = "orange", linewidth = 1.2) +
+  geom_point(color = "orange", size = 2.5) +
+  labs(
+    title = "Indice de Exposicion a la Renta Petrolera en Venezuela (1980-2023)",
+    subtitle = "Calculado como: PIB Nominal / Valor de Exportaciones de Petroleo",
+    x = "Ano",
+    y = "Indice de Exposicion (Ratio)"
+  ) +
+  theme_minimal() +
+  theme(plot.subtitle = element_text(size = 9, color = "gray30"))
+ggplotly(grafico_indice_exposicion)
+```
+
+#### Tendencia del Índice de Eficiencia Económica de la Producción Petrolera
+
+Este gráfico ilustra la evolución del **Índice de Eficiencia Económica de la Producción Petrolera**, indicando cuántos barriles de petróleo fueron necesarios para generar una unidad de PIB, lo que nos permite evaluar la productividad económica del recurso.
+
+```{r indice-eficiencia, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10, fig.height=6}
+# Gráfico 10: Evolución del Índice de Eficiencia Económica de la Producción Petrolera
+grafico_indice_eficiencia <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = indice_eficiencia)) +
+  geom_line(color = "turquoise4", linewidth = 1.2) +
+  geom_point(color = "turquoise4", size = 2.5) +
+  labs(
+    title = "Indice de Eficiencia Economica de la Produccion Petrolera en Venezuela (1980-2023)",
+    subtitle = "Calculado como: Produccion Total Anual de Barriles / PIB Nominal",
+    x = "Ano",
+    y = "Indice de Eficiencia (Barriles / Millon USD PIB)"
+  ) +
+  theme_minimal() +
+  theme(plot.subtitle = element_text(size = 9, color = "gray30"))
+ggplotly(grafico_indice_eficiencia)
+```
+
+### Tablas Interactivas
+
+Complementando los gráficos, se han generado **tablas interactivas** utilizando la librería `DT`, lo que facilita la exploración detallada de los datos consolidados y de los índices derivados.
+
+#### Tabla Interactiva de Datos Consolidados
+
+Esta tabla presenta un **resumen completo de todas las variables macroeconómicas y petroleras** de Venezuela para el período de estudio, permitiendo a los usuarios buscar, ordenar y paginar los datos de manera eficiente.
+
+```{r tabla-datos-consolidados, warning=FALSE, message=FALSE, echo=FALSE}
+# Tabla Interactiva 1: Datos Consolidados Completos
+tabla_datos_consolidados_interactiva <- DT::datatable(
+  datos_venezuela_consolidados,
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE,
+  caption = "Tabla Interactiva: Datos Consolidados de Venezuela (1980-2023) - Explora todos los indicadores economicos y petroleros consolidados.", # 'económicos' y 'petroleros' sin acento
+  colnames = c(
+    "Ano", # 'Año' sin 'ñ'
+    "PIB Nominal (Millones USD)",
+    "Variacion PIB Real (%)", # 'Variación' sin acento
+    "Exportaciones Petroleo (Millones USD)", # 'Petróleo' sin acento
+    "Saldo Cuenta Corriente (Millones USD)",
+    "Produccion Petroleo (Miles B/D)", # 'Producción' y 'Petróleo' sin acento
+    "Exportaciones Crudo (Miles B/D)",
+    "Precio Nominal Cesta OPEP ($/b)",
+    "Precio Real Cesta OPEP ($/b)",
+    "Indice Exposicion Petrolera", # 'Índice' y 'Exposición' sin acento
+    "Indice Eficiencia Petrolera" # 'Índice' y 'Eficiencia' sin acento
+  )
+)
+tabla_datos_consolidados_interactiva
+```
+
+#### Tabla Interactiva de Índices Clave y sus Componentes
+
+Esta tabla muestra los **valores numéricos precisos de los índices de exposición y eficiencia**, junto con las variables que los componen (PIB, exportaciones, producción). Es una herramienta valiosa para quienes deseen examinar los datos subyacentes a las tendencias visualizadas.
+
+```{r tabla-indices, warning=FALSE, message=FALSE, echo=FALSE}
+# Tabla Interactiva 2: Resumen Detallado de los Índices Clave y sus Componentes
+tabla_indices_detallada <- datos_venezuela_consolidados %>%
+  mutate(produccion_total_barriles_anuales = produccion_petroleo_bd * 365) %>%
+  select(
+    anio,
+    pib_nominal,
+    exportaciones_petroleo_usd,
+    indice_exposicion,
+    produccion_petroleo_bd,
+    produccion_total_barriles_anuales,
+    indice_eficiencia
+  ) %>%
+  mutate(
+    pib_nominal = round(pib_nominal, 2),
+    exportaciones_petroleo_usd = round(exportaciones_petroleo_usd, 2),
+    indice_exposicion = round(indice_exposicion, 2),
+    produccion_petroleo_bd = round(produccion_petroleo_bd, 2),
+    produccion_total_barriles_anuales = round(produccion_total_barriles_anuales, 0),
+    indice_eficiencia = round(indice_eficiencia, 2)
+  )
+
+tabla_indices_interactiva <- DT::datatable(
+  tabla_indices_detallada,
+  options = list(pageLength = 10, scrollX = TRUE),
+  rownames = FALSE,
+  caption = "Tabla Interactiva: Indices Clave y sus Componentes (1980-2023) - Analisis detallado de los indices de exposicion y eficiencia petrolera con sus componentes.", # 'Índices', 'Análisis', 'exposición', 'eficiencia' sin acento
+  colnames = c(
+    "Anio", # 'Año' sin 'ñ'
+    "PIB Nominal (Millones USD)",
+    "Exportaciones Petroleo (Millones USD)", # 'Petróleo' sin acento
+    "Indice Exposicion Petrolera", # 'Índice' y 'Exposición' sin acento
+    "Produccion Petroleo Diaria (Miles B/D)", # 'Producción' y 'Petróleo' sin acento
+    "Produccion Petroleo Anual (Miles Barriles)", # 'Producción' y 'Petróleo' sin acento
+    "Indice Eficiencia Petrolera" # 'Índice' y 'Eficiencia' sin acento
+  )
+)
+tabla_indices_interactiva
+```
+:::
+
+## 3. Análisis de Resultados
+
+Esta sección se enfoca en la interpretación de los hallazgos clave derivados de la exploración de datos, la construcción de modelos y el desarrollo de índices. El objetivo principal es desglosar la significancia de estos resultados y cómo contribuyen a responder la pregunta de investigación central de este estudio.
+
+## 3.1 Modelos Econométricos
+
+Para entender las relaciones clave en la economía petrolera venezolana, hemos desarrollado dos modelos de regresión lineal. Estos modelos nos ayudarán a cuantificar el impacto de las variables petroleras en indicadores macroeconómicos clave, como el **PIB Nominal** y el **Saldo de la Cuenta Corriente**. Además, realizamos diagnósticos importantes para evaluar la validez de los supuestos de los modelos, como la **multicolinealidad** y la **autocorrelación de los residuos**.
+
+### 3.1.1 Modelo 1: Impacto de las Variables Petroleras en el PIB Nominal
+
+Este modelo busca responder: **¿Cómo influyen el precio real del petróleo (Cesta OPEP) y la producción de petróleo en barriles por día en el Producto Interno Bruto Nominal de Venezuela?**
+
+Consideramos que el **PIB Nominal** (`pib_nominal`) es la variable dependiente, y el **precio real de la Cesta OPEP** (`precio_real_cesta`) y la **producción de petróleo en miles de barriles por día** (`produccion_petroleo_bd`) son las variables explicativas.
+
+```{r echo=FALSE}
+# Modelo 1: Impacto de las variables petroleras en el PIB Nominal
+modelo_pib_nominal <- lm(pib_nominal ~ precio_real_cesta + produccion_petroleo_bd, data = datos_venezuela_consolidados)
+summary(modelo_pib_nominal)
+```
+
+**Diagnóstico de Multicolinealidad (VIF - Factor de Inflación de la Varianza)**
+
+La multicolinealidad puede inflar los errores estándar de los coeficientes, haciendo que las variables parezcan menos significativas de lo que son. Un valor de VIF superior a 5-10 generalmente indica la presencia de multicolinealidad significativa.
+
+```{r echo=FALSE}
+# Diagnóstico de multicolinealidad
+library(car) # Asegúrate de que 'car' está cargada en tu chunk de setup
+vif(modelo_pib_nominal)
+```
+
+**Diagnóstico de Autocorrelación de los Residuos (Test de Durbin-Watson)**
+
+La autocorrelación ocurre cuando los residuos de un período están correlacionados con los de períodos anteriores, lo cual es común en series de tiempo. Un valor del estadístico de Durbin-Watson cercano a 2 sugiere ausencia de autocorrelación, mientras que valores cercanos a 0 o 4 indican autocorrelación positiva o negativa, respectivamente.
+
+```{r echo=FALSE}
+# Diagnóstico de autocorrelación de los residuos
+library(lmtest) # Asegúrate de que 'lmtest' está cargada en tu chunk de setup
+dwtest(modelo_pib_nominal)
+```
+
+### 3.1.2 Modelo 2: Impacto de las Exportaciones de Petróleo en el Saldo de la Cuenta Corriente
+
+Este segundo modelo aborda la pregunta: **¿Cuál es la relación entre el valor de las exportaciones de petróleo y el saldo de la cuenta corriente de Venezuela?**
+
+Aquí, el **Saldo de la Cuenta Corriente** (`saldo_corriente_usd`) es la variable dependiente y las **exportaciones de petróleo en millones de USD** (`exportaciones_petroleo_usd`) es la variable explicativa.
+
+```{r echo=FALSE}
+# Modelo 2: Impacto de las exportaciones de petróleo en el Saldo de la Cuenta Corriente
+modelo_saldo_corriente <- lm(saldo_corriente_usd ~ exportaciones_petroleo_usd, data = datos_venezuela_consolidados)
+summary(modelo_saldo_corriente)
+```
+
+**Diagnóstico de Autocorrelación de los Residuos (Test de Durbin-Watson)**
+
+Similar al modelo anterior, verificamos la presencia de autocorrelación en los residuos para asegurar la validez de los errores estándar y la significancia de los coeficientes.
+
+```{r echo=FALSE}
+# Diagnóstico de autocorrelación de los residuos
+dwtest(modelo_saldo_corriente)
+```
+
+## 3.2 Índices Clave Desarrollados
+
+Para cuantificar y comprender mejor la dinámica de la dependencia y el rendimiento del sector petrolero en la economía venezolana, hemos desarrollado dos índices clave. Estos indicadores nos permiten analizar tendencias específicas que son fundamentales para responder nuestra pregunta de investigación.
+
+### 3.2.1 Índice de Exposición a la Renta Petrolera
+
+Este índice ha sido diseñado para medir la **dependencia relativa de la economía venezolana respecto a los ingresos generados por la exportación de petróleo**. Se calcula como la razón entre el **Producto Interno Bruto Nominal (PIB Nominal)** y el **valor de las Exportaciones de Petróleo en USD**.
+
+Un valor **mayor** de este índice sugiere una **menor exposición o dependencia** a los ingresos directos del petróleo, ya que indica que el PIB nominal es proporcionalmente mayor en relación con las exportaciones petroleras. Por el contrario, un valor **menor** indicaría una **mayor exposición o dependencia**, donde una parte más significativa del PIB nominal está directamente ligada al valor de las exportaciones petroleras.
+
+Las tendencias históricas de este índice se visualizan en el apartado de **indices derivados gráfico 1** de la Sección 2. Al observar el período 1980-2023, podemos identificar patrones interesantes:
+
+-   **Década de 1980:** El índice muestra una tendencia general de **valores bajos** (indicando mayor exposición), con una marcada caída a principios de los 90, lo que sugiere una alta dependencia del valor de las exportaciones petroleras en ese periodo. Se observa un pico notable alrededor de 1987-1988, indicando un momento de menor exposición relativa, aunque breve.
+
+-   **Finales de los 90 e inicios de los 2000:** Se aprecia una fuerte **volatilidad**, con picos y valles que reflejan la inestabilidad en la relación entre el PIB y los ingresos petroleros.
+
+-   **Período 2005-2015 (aprox.):** El índice tiende a mantenerse en **valores relativamente bajos** (alrededor de 3 a 5), lo que podría indicar una persistencia de la alta exposición o dependencia durante el boom de precios petroleros de esos años, donde el PIB crecía, pero los ingresos petroleros seguían siendo un componente muy dominante.
+
+-   **A partir de 2016-2017:** El índice muestra una **ascensión dramática**, alcanzando picos muy altos (superando el valor de 8 en 2020). Esto podría interpretarse como una **reducción drástica de la exposición/dependencia directa** al valor de las exportaciones petroleras. Sin embargo, dada la crisis económica venezolana en este periodo (caída del PIB real y de la producción petrolera), esta "menor exposición" es engañosa; más bien, refleja una **desvinculación disfuncional** donde el PIB nominal se ha contraído drásticamente en relación con los ingresos petroleros, o donde los ingresos petroleros nominales cayeron a un ritmo diferente al PIB nominal. Es crucial analizar esto en conjunto con otros indicadores.
+
+### 3.2.2 Índice de Eficiencia Económica de la Producción Petrolera
+
+El segundo índice creado busca evaluar la **eficiencia económica con la que la producción de petróleo crudo contribuye al PIB nominal del país**. Se define como la relación entre la **producción total anual de barriles de crudo** y el **PIB Nominal anual**.​
+
+Para su cálculo, la producción diaria de petróleo en miles de barriles (`produccion_petroleo_bd`) fue convertida a barriles anuales multiplicándola por 365 días.
+
+Un valor **menor** de este índice indicaría una **mayor eficiencia**, ya que significa que se necesita una menor cantidad de barriles producidos para generar una unidad de PIB nominal. Por el contrario, un valor **mayor** sugeriría una **menor eficiencia**, implicando que se requieren más barriles de producción para alcanzar el mismo nivel de PIB nominal. Este índice puede reflejar la productividad del recurso, la diversificación económica o los costos de producción.
+
+La evolución de este índice a lo largo del tiempo se presenta en el **Gráfico 2 de Indices Derivados** de la Sección 2. Podemos identificar las siguientes tendencias clave:
+
+-   **Década de 1980 a inicios de los 90:** El índice muestra un **aumento significativo**, alcanzando un pico alrededor de 1990 (cerca de 16 barriles/millón USD PIB). Un valor alto significa que se necesitaban muchos más barriles para generar el mismo nivel de PIB nominal, lo que sugiere una **menor eficiencia económica de la producción petrolera** en ese momento. Esto podría indicar bajos precios del petróleo, problemas de productividad o una mayor diversificación económica (aunque esta última es menos probable dados los valores iniciales).
+
+-   **Mediados de los 90 al 2000:** Se observa una **tendencia descendente**, con fluctuaciones, indicando una posible **mejora en la eficiencia** o un cambio en la relación entre producción y PIB.
+
+-   **Período 2005-2015:** El índice experimenta una **caída drástica y sostenida**, alcanzando sus valores **más bajos** (alrededor de 3-4 barriles/millón USD PIB) entre 2008 y 2012. Esto es un indicador de **mayor eficiencia**, implicando que la economía generaba más PIB nominal por cada barril producido. Esto podría deberse a precios del petróleo muy altos que impulsaban el PIB nominal, o a mejoras en la rentabilidad o valor añadido por barril.
+
+-   **A partir de 2016-2017:** El índice vuelve a mostrar un **aumento** considerable, aunque no tan pronunciado como en los años 80, pero sí una tendencia al alza hacia valores más cercanos a 4-5 barriles/millón USD PIB. Este repunte sugiere una **disminución de la eficiencia económica**, donde se requiere más petróleo para generar el mismo nivel de PIB nominal. Esto podría estar asociado a la caída de la producción, la crisis económica y la contracción del PIB real en este período.
+
+## 3.4 Respuesta a la Pregunta de Investigación y Conclusiones del Análisis
+
+La integración de los resultados de los modelos econométricos y el análisis de los índices clave nos permite formular una respuesta robusta a la pregunta de investigación central de este estudio: **¿Cómo han modificado las principales variables del mercado petrolero internacional (precios, producción y exportaciones) la dinámica del PIB venezolano y otros indicadores macroeconómicos clave entre 1980 y 2023, y cómo ha evolucionado la eficiencia económica del país para generar valor a partir de su sector petrolero y la magnitud de su exposición a los ingresos petroleros a lo largo de este período?**
+
+### 3.4.1 Integración y Conclusiones Derivadas de los Modelos y los Índices
+
+El análisis conjunto de los modelos econométricos y los índices desarrollados revela una imagen compleja pero coherente de la economía petrolera venezolana a lo largo del período 1980-2023, proporcionando respuestas directas a los componentes de nuestra pregunta de investigación:
+
+1.  **Modificación de la Dinámica del PIB Venezolano y Otros Indicadores Clave por Variables Petroleras:**
+
+    -   **Impacto en el PIB Nominal:** El **Modelo 1** (Impacto en el PIB Nominal) demuestra de manera contundente que tanto el **precio real de la Cesta OPEP** (coeficiente = 2308.04, p \< 0.001) como la **producción de petróleo en miles de barriles por día** (coeficiente = 65.32, p \< 0.001) han sido **modificadores directos y altamente significativos** de la dinámica del Producto Interno Bruto Nominal de Venezuela. El modelo indica que por cada aumento de un dólar en el precio real del barril, el PIB Nominal tiende a aumentar en 2308.04 millones de USD, y por cada mil barriles adicionales de producción diaria, el PIB Nominal aumenta en 65.32 millones de USD. Un **R-cuadrado ajustado de 0.7589** confirma que estas dos variables explican una porción sustancial del comportamiento del PIB Nominal, evidenciando una dependencia estructural y profunda.
+
+    -   **Impacto en el Saldo de la Cuenta Corriente:** El **Modelo 2** (Impacto en el Saldo de la Cuenta Corriente) complementa esta visión al revelar que las **exportaciones de petróleo en valor** (coeficiente = 0.17808, p \< 0.001) son un **determinante significativo y positivo** del Saldo de la Cuenta Corriente. Esto significa que un aumento en el valor de las exportaciones petroleras mejora directamente la balanza de transacciones internacionales del país, confirmando el rol crucial del sector en la generación de divisas y el equilibrio externo.
+
+2.  **Evolución de la Magnitud de la Exposición a los Ingresos Petroleros:**
+
+    -   El **Índice de Exposición a la Renta Petrolera** ilustra la evolución de esta magnitud. Los **valores generalmente bajos** del índice a lo largo de gran parte del período (especialmente en los 80 y 2005-2015) indican una **alta y persistente exposición/dependencia** de la economía venezolana a los ingresos directos del petróleo. La fuerte volatilidad en los 90 y principios de los 2000 refleja periodos de inestabilidad.
+
+    -   De forma crítica, la **ascensión dramática del índice a partir de 2016-2017** (superando el valor de 8 en 2020) representa una **transformación paradójica de la exposición**. Si bien un valor alto teóricamente indica menor dependencia, en el contexto de la profunda contracción económica venezolana, este aumento no significa diversificación sino una **desconexión disfuncional**: el PIB nominal ha disminuido drásticamente incluso frente a ingresos petroleros (también en declive pero a otro ritmo), revelando una incapacidad estructural para traducir la riqueza petrolera en un bienestar económico sostenido. Esto sugiere que la magnitud de la "exposición" ahora se manifiesta más como una vulnerabilidad estructural.
+
+3.  **Evolución de la Eficiencia Económica para Generar Valor del Sector Petrolero:**
+
+    -   El **Índice de Eficiencia Económica de la Producción Petrolera** (Gráfico \[Número del gráfico de eficiencia\]) proporciona una visión clave de cómo el país ha generado valor por barril. La **baja eficiencia observada a principios de los 90** (pico de 16 barriles/millón USD PIB) contrasta fuertemente con la **"mayor eficiencia" relativa entre 2008 y 2012** (valores de 3-4 barriles/millón USD PIB), período que coincide con el auge de los precios petroleros. Esta mejora no necesariamente implica un aumento de la productividad interna, sino la capacidad de generar más PIB nominal a partir de cada barril debido a su mayor valor de mercado.
+
+    -   Sin embargo, el **repunte del índice a partir de 2016-2017**, indicando una **disminución de la eficiencia** (se necesitan más barriles para generar el mismo PIB nominal), es alarmante. Esto coincide con el colapso de la producción petrolera, la hiperinflación y la recesión económica, sugiriendo una grave erosión de la capacidad del sector petrolero para impulsar el valor económico agregado, independientemente del volumen o precio.
+
+### 3.4.2 Conclusión y Satisfacción del Análisis
+
+En síntesis, este estudio confirma que las variables del mercado petrolero internacional (especialmente precios y producción) han sido los **motores primarios y los principales modificadores de la dinámica macroeconómica venezolana** entre 1980 y 2023, impactando directamente tanto el PIB nominal como la balanza externa. La evolución de la **exposición a los ingresos petroleros** ha pasado de una dependencia estructural a una **vulnerabilidad disfuncional** en años recientes, mientras que la **eficiencia económica para generar valor del sector petrolero** ha mostrado fluctuaciones que, si bien mejoraron durante los booms de precios, se han deteriorado drásticamente en el contexto de la crisis actual.
+
+**El análisis realizado es satisfactorio** en su capacidad de responder la compleja pregunta de investigación. Los modelos econométricos han cuantificado de forma robusta las relaciones directas entre las variables petroleras y los indicadores macroeconómicos clave, mientras que los índices han proporcionado una visión temporal invaluable sobre la magnitud de la exposición y la eficiencia económica. Los hallazgos no solo confirman la persistencia de una economía rentista, sino que también iluminan las **transformaciones disfuncionales** que han ocurrido en la última década, donde la menor exposición y eficiencia no se traducen en diversificación, sino en un colapso del poder generador de valor del sector petrolero.
+
+Si bien los diagnósticos de autocorrelación en ambos modelos sugieren la presencia de dinámicas temporales no totalmente capturadas por los modelos lineales simples (lo que abre la puerta a futuras investigaciones con técnicas de series de tiempo más avanzadas), la solidez de los coeficientes y la coherencia con las tendencias de los índices brindan una base sólida para las conclusiones presentadas. Este estudio subraya la necesidad crítica de una transformación estructural profunda en la economía venezolana que vaya más allá de las fluctuaciones del mercado petrolero para construir una base económica sostenible.
