@@ -1,0 +1,220 @@
+---
+title: "La Renta Petrolera Venezolana: Un Viaje a Través de los Datos"
+subtitle: "Desentrañando la Dependencia y la Eficiencia Económica (1980-2023)"
+author: "Carlos Morillo - Jonathan Perez - Dolly Laynes- Victor Delgado"
+format: 
+  revealjs:
+    theme: sky 
+    logo: "https://www.ucv.ve/fileadmin/user_upload/logo-ucv.png" 
+    slide-number: true
+    chalkboard: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE) 
+library(tidyverse)
+library(lubridate)
+library(plotly) # Para gráficos interactivos
+```
+
+## Nuestro Viaje por los Datos
+
+::: incremental
+-   Venezuela: un caso de estudio emblemático donde la economía late al ritmo del petróleo.
+
+-   Hoy, usaremos la ciencia de datos para desentrañar su historia económica, más allá de las narrativas.
+
+-   **Nuestro objetivo:** Medir con precisión la influencia de la renta petrolera y entender su evolución en un período de profundos cambios estructurales (1980-2023).
+:::
+
+::: {.callout-note appearance="simple"}
+### Conexión con el Ciclo de Ciencia de Datos
+
+**Fase 1: Identificación del Problema.** La elección de este tema y la formulación de nuestro objetivo es el punto de partida de todo el ciclo.
+:::
+
+## La Brújula de Nuestra Investigación
+
+> **¿Cómo han modificado las variables del mercado petrolero la dinámica del PIB venezolano entre 1980 y 2023, y cómo ha evolucionado la eficiencia y la exposición a los ingresos petroleros en este período?**
+
+Analizaremos:
+
+-   La **contribución** de la renta al PIB.
+-   El impacto de **shocks** externos (precios).
+-   La evolución de la **eficiencia** y **dependencia**.
+
+::: {.callout-note appearance="simple"}
+### Conexión con el Ciclo de Ciencia de Datos
+
+**Fase 1: Definición de la Pregunta.** Una pregunta clara y específica es la base para un análisis de datos efectivo y reproducible.
+:::
+
+## Los Pilares de Nuestro Análisis
+
+Construimos dos indicadores clave para ir más allá de las variables tradicionales.
+
+::::: columns
+::: {.column width="50%"}
+#### 1. Índice de Exposición
+
+**Pregunta:** ¿Qué tan grande es la economía (PIB) en relación a los ingresos por exportación petrolera?
+
+$$
+\frac{\text{PIB Nominal Anual}}{\text{Valor Exportaciones Petróleo}}
+$$
+
+**Relevancia:** Cuantifica la **dependencia** relativa a lo largo del tiempo. Un valor BAJO significa ALTA dependencia.
+:::
+
+::: {.column width="50%"}
+#### 2. Índice de Eficiencia
+
+**Pregunta:** ¿Qué tan eficiente ha sido Venezuela en transformar cada barril en riqueza (PIB)?
+
+$$
+\frac{\text{Producción Anual de Barriles}}{\text{PIB Nominal Anual}}
+$$
+
+**Relevancia:** Mide la **productividad** del recurso. Un valor ALTO significa MENOR eficiencia.
+:::
+:::::
+
+::: {.callout-note appearance="simple"}
+### Conexión con el Ciclo de Ciencia de Datos
+
+**Fase 3: Transformar.** Esto es "ingeniería de características": creamos nuevas variables para extraer más valor y responder nuestra pregunta.
+:::
+
+## El Flujo de los Datos
+
+De la recolección a la preparación.
+
+-   **Importar:** Usamos como fuente principal los Boletines Estadísticos Anuales de la **OPEP**, garantizando consistencia.
+
+-   **Ordenar y Limpiar:** Consolidamos múltiples tablas en un solo dataset. Usamos `dplyr` en R para manejar inconsistencias y preparar las series temporales para el análisis.
+
+-   **Transformar:** Calculamos nuestros índices de **Exposición** y **Eficiencia** para cada año del estudio.
+
+::: {.callout-note appearance="simple"}
+### Conexión con el Ciclo de Ciencia de Datos
+
+**Fases 2 y 3: Importar, Ordenar y Limpiar.** Estas fases, aunque menos glamorosas, son **críticas** para la fiabilidad de nuestros resultados.
+:::
+
+## El Flujo de los Datos
+
+De la recolección a la preparación.
+
+-   **Importar:** Usamos como fuente principal los Boletines Estadísticos Anuales de la **OPEP**, garantizando consistencia.
+
+-   **Ordenar y Limpiar:** Consolidamos múltiples tablas en un solo dataset. Usamos `dplyr` en R para manejar inconsistencias y preparar las series temporales para el análisis.
+
+-   **Transformar:** Calculamos nuestros índices de **Exposición** y **Eficiencia** para cada año del estudio.
+
+::: {.callout-note appearance="simple"}
+### Conexión con el Ciclo de Ciencia de Datos
+
+**Fases 2 y 3: Importar, Ordenar y Limpiar.** Estas fases, aunque menos glamorosas, son **críticas** para la fiabilidad de nuestros resultados.
+:::
+
+## Desvelando Patrones: Contando Historias con Gráficos
+
+### PIB Nominal vs. Exportaciones de Petróleo
+
+Este gráfico muestra la fuerte correlación histórica entre el tamaño de la economía y los ingresos petroleros.
+
+```{r pib-vs-exportaciones, echo=FALSE, warning=FALSE, message=FALSE, fig.width=10, fig.height=5}
+# Preparar datos para el gráfico comparativo
+pib_export_long <- datos_venezuela_consolidados %>%
+  select(anio, pib_nominal, exportaciones_petroleo_usd) %>%
+  rename(
+    `PIB Nominal` = pib_nominal,
+    `Exportaciones Petróleo` = exportaciones_petroleo_usd
+  ) %>%
+  pivot_longer(
+    cols = -anio,
+    names_to = "variable",
+    values_to = "valor"
+  )
+
+# Gráfico
+g <- ggplot(pib_export_long, aes(x = anio, y = valor, color = variable)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  labs(
+    title = "PIB Nominal y Exportaciones de Petróleo (1980-2023)",
+    x = "Año",
+    y = "Millones de USD",
+    color = "Indicador"
+  ) +
+  scale_y_continuous(labels = scales::dollar_format(prefix = "$", suffix = "M")) +
+  theme_minimal() +
+  scale_color_manual(values = c("PIB Nominal" = "darkblue", "Exportaciones Petróleo" = "darkgreen"))
+
+ggplotly(g)
+```
+
+## Desvelando Patrones: Contando Historias con Gráficos
+
+### La Eficiencia en Tres Actos
+
+Nuestro **Índice de Eficiencia** revela una historia dramática. Recuerda: **más alto es peor**.
+
+```{r indice-eficiencia-plot, echo=FALSE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
+grafico_indice_eficiencia <- ggplot(datos_venezuela_consolidados, aes(x = anio, y = indice_eficiencia)) +
+  geom_line(color = "turquoise4", linewidth = 1.2) +
+  geom_point(color = "turquoise4", size = 2.5) +
+  labs(
+    title = "Índice de Eficiencia Económica (1980-2023)",
+    subtitle = "Barriles necesarios para generar 1 millón de USD de PIB",
+    x = "Año", y = "Índice (Barriles / Millón USD PIB)"
+  ) +
+  theme_minimal()
+ggplotly(grafico_indice_eficiencia)
+```
+
+## Los Hallazgos Clave: ¿Qué nos Dicen los Datos?
+
+::: incremental
+-   **Hallazgo 1: La Dependencia Persiste.** Confirmamos la histórica dependencia. El **Índice de Exposición** muestra que, incluso en crisis, la economía sigue estructuralmente atada al ingreso petrolero.
+
+-   **Hallazgo 2: La Eficiencia en Tres Actos.** El **Índice de Eficiencia** cuenta una historia:
+
+    1.  **Baja eficiencia (80s-90s):** Se necesitaban muchos barriles para generar riqueza.
+    2.  **"Época Dorada" (2004-2014):** Alta eficiencia, impulsada por precios récord.
+    3.  **Colapso y "Equilibrio en la Contracción" (2015-hoy):** Una caída dramática de la eficiencia, reflejando el colapso productivo.
+
+-   **Hallazgo 3: Los Modelos Confirman.** Nuestros modelos de regresión validan estadísticamente que el **precio** y la **producción** de petróleo son los principales determinantes del PIB venezolano (R² ajustado: 0.76).
+:::
+
+## Más Allá del Código: Nuestro Proceso
+
+Este proyecto fue más que ejecutar scripts. Fue un ejercicio completo de ciencia de datos.
+
+-   **Pensamiento Crítico:** No solo mostramos datos, formulamos preguntas complejas sobre eficiencia y dependencia.
+
+-   **Storytelling con Datos:** Transformamos tablas y números en una narrativa coherente sobre la historia económica de Venezuela.
+
+-   **Análisis Multidimensional:** Fuimos más allá de la correlación simple, creando índices para añadir capas de profundidad al análisis.
+
+-   **Curiosidad y Persistencia:** Navegamos la complejidad de los datos económicos, superando desafíos para encontrar la verdad detrás de las cifras.
+
+## Conclusiones y Reflexiones Finales
+
+-   La dependencia petrolera de Venezuela no es estática; es una dinámica compleja de **exposición** y **eficiencia** que ha cambiado drásticamente.
+
+-   La "eficiencia" lograda durante el boom de precios no fue estructural, sino una función de altos ingresos, haciéndola insostenible.
+
+-   Nuestro proyecto aporta **evidencia cuantitativa y reproducible** a un debate a menudo dominado por enfoques cualitativos, demostrando el poder de la ciencia de datos para analizar problemas económicos fundamentales.
+
+## ¡Gracias!
+
+**Preguntas y Comentarios**
+
+------------------------------------------------------------------------
+
+**Accede a nuestro trabajo:**
+
+-   **Informe Completo:** [rpubs.com/CEMC/mercado_petrolero](https://rpubs.com/CEMC/mercado_petrolero)
+-   **Repositorio en GitHub (Código y Datos):** [github.com/Cemc0210/mercado_petrolero](https://github.com/Cemc0210/mercado_petrolero)
