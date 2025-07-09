@@ -15,6 +15,7 @@ rm(list = ls())  # Limpiar todo
 
 library(tidyverse)
 library(readxl)
+library(here)
 
 # --- PASO 1: Empezaremos a filtrar los datos ---
 
@@ -59,7 +60,7 @@ extraer_indicador_pais <- function(ruta_archivo, nombre_pais,
 
 # 01 PIB Nominal (millones de USD) 
 venezuela_pib_nominal <- extraer_indicador_pais(
-  ruta_archivo = "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/1_PIB_NOMINAL_OPEP.xlsx",
+  ruta_archivo = here("datos", "1_PIB_NOMINAL_OPEP.xlsx"),
   nombre_pais = "Venezuela",
   nombre_indicador = "PIB Nominal (millones de USD)",
   anio_inicio = 1960
@@ -67,7 +68,7 @@ venezuela_pib_nominal <- extraer_indicador_pais(
 
 # 02 PIB Real variacion %
 venezuela_pib_real <- extraer_indicador_pais(
-  ruta_archivo = "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/2_PIB_REAL_VARIACION_OPEP.xlsx",
+  ruta_archivo =  here("datos", "2_PIB_REAL_VARIACION_OPEP.xlsx"),
   nombre_pais = "Venezuela",
   nombre_indicador = "PIB Real variacion %",
   anio_inicio = 1960
@@ -75,7 +76,7 @@ venezuela_pib_real <- extraer_indicador_pais(
 
 # 03 Exportaciones de petroleo (millones de USD)
 venezuela_exportaciones_petroleo <- extraer_indicador_pais(
-  ruta_archivo = "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/3_EXPORTACIONES_PETROLEO_OPEP.xlsx",
+  ruta_archivo = here("datos", "3_EXPORTACIONES_PETROLEO_OPEP.xlsx"),
   nombre_pais = "Venezuela",
   nombre_indicador = "Exportaciones de petroleo (millones de USD)",
   anio_inicio = 1960
@@ -83,7 +84,7 @@ venezuela_exportaciones_petroleo <- extraer_indicador_pais(
 
 # 04 Saldo Corriente (millones de USD)
 venezuela_saldo_corriente <- extraer_indicador_pais(
-  ruta_archivo = "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/4_SALDOCORRIENTE_OPEP.xlsx",
+  ruta_archivo = here("datos", "3_EXPORTACIONES_PETROLEO_OPEP.xlsx"),
   nombre_pais = "Venezuela",
   nombre_indicador = "Saldo Corriente (millones de USD)",
   anio_inicio = 1960
@@ -96,11 +97,10 @@ venezuela_saldo_corriente <- extraer_indicador_pais(
 
 # Leer el archivo original
 datos_crudos_productos_petroleros_venezuela <- read_excel(
-  "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/5_PRODUCCION_PRODUCTOSPETROLIFEROS_OPEP.xlsx",
+  here("datos", "5_PRODUCCION_PRODUCTOSPETROLIFEROS_OPEP.xlsx"),
   sheet = 1,
   col_names = FALSE
 )
-
 # Detectar la fila donde comienza Venezuela
 fila_inicio_productos_venezuela <- which(datos_crudos_productos_petroleros_venezuela[[1]] == "Venezuela")
 
@@ -140,7 +140,7 @@ venezuela_productos_petro <- venezuela_productos_petro %>%
 
 # 06 Produccion de Petroleo (1.000 B/D)
 venezuela_produccion_petroleo <- extraer_indicador_pais(
-  ruta_archivo = "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/6_PRODUCCION_PETROLEO_OPEP.xlsx",
+  ruta_archivo = here("datos", "6_PRODUCCION_PETROLEO_OPEP.xlsx"),
   nombre_pais = "Venezuela",
   nombre_indicador = "Produccion de Petroleo (1.000 B/D)",
   anio_inicio = 1960
@@ -150,7 +150,7 @@ venezuela_produccion_petroleo <- extraer_indicador_pais(
 
 # 07 Exportaciones Petroleo Crudo (1.000 B/D)
 venezuela_exportaciones_petroleo_bd <- extraer_indicador_pais(
-  ruta_archivo = "~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/7_EXPORTACIONES_PETROLEOCRUDO_OPEP.xlsx",
+  ruta_archivo = here("datos", "7_EXPORTACIONES_PETROLEOCRUDO_OPEP.xlsx"),
   nombre_pais = "Venezuela",
   nombre_indicador = "Exportaciones Petroleo Crudo (1.000 B/D)",
   anio_inicio = 1980
@@ -161,7 +161,9 @@ venezuela_exportaciones_petroleo_bd <- extraer_indicador_pais(
 # En este caso haremos igual que en el caso 5, no usaremos la funcion sino que lo haremos manualmente
 
 # Leer el archivo
-datos_precio_cesta_opep <- read_excel("~/cursor/mercado_petrolero/proyecto_mercado_petrolero/datos/10_PRECIO_NOMINALYREAL_CESTA_OPEP.xlsx", sheet = 1, col_names = FALSE)
+datos_precio_cesta_opep <- read_excel(here("datos", "10_PRECIO_NOMINALYREAL_CESTA_OPEP.xlsx"),
+                                      sheet = 1,
+                                      col_names = FALSE)
 
 # Paso 1: Detectar las filas que contienen los precios
 fila_nominal <- which(datos_precio_cesta_opep[[1]] == "Nominal oil price")
